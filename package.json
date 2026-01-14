@@ -1,0 +1,47 @@
+{
+  "name": "eec-onboarding-app",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "server": "nodemon server/index.js",
+    "start:all": "concurrently \"npm run server\" \"npm run dev\" --kill-others",
+    "build": "vite build",
+    "lint": "eslint .",
+    "deploy": "node scripts/deploy.js"
+  },
+  "dependencies": {
+    "@heroicons/react": "^2.2.0",
+    "@supabase/supabase-js": "^2.81.1",
+    "@whop-sdk/core": "^1.0.0",
+    "body-parser": "^2.2.0",
+    "concurrently": "^9.2.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "express-rate-limit": "^7.1.5",
+    "inngest": "^3.45.1",
+    "nodemon": "^3.1.11",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "resend": "^6.4.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@vitejs/plugin-react": "^5.1.0",
+    "autoprefixer": "^10.4.17",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.5.0",
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.17",
+    "vite": "npm:rolldown-vite@7.2.2"
+  },
+  "overrides": {
+    "vite": "npm:rolldown-vite@7.2.2"
+  }
+}

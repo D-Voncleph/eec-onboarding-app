@@ -35,35 +35,35 @@ export default async function handler(req, res) {
       }
     }
 
-    const { action, data } = req.body;
+    const { event, data } = req.body;
 
-    console.log(`⚡ Webhook received: ${action}`);
+    console.log(`⚡ Webhook received: ${event}`);
 
     // Handle different webhook events
-    switch (action) {
-      case 'membership.went_valid':
-        // New premium member
-        await handleNewMembership(data, res);
+    switch (event) {
+      case 'membership_activated':
+        // New membership activated - new member joined
+        await handleMembershipActivated(data, res);
         break;
 
-      case 'membership.went_invalid':
+      case 'membership_deactivated':
         // Membership ended
-        await handleMembershipEnded(data, res);
+        await handleMembershipDeactivated(data, res);
         break;
 
-      case 'payment.succeeded':
+      case 'payment_succeeded':
         // Payment completed
-        await handlePaymentSuccess(data, res);
+        await handlePaymentSucceeded(data, res);
         break;
 
-      case 'membership.created':
-        // New member
-        await handleMembershipCreated(data, res);
+      case 'refund_created':
+        // Refund processed
+        await handleRefundCreated(data, res);
         break;
 
       default:
-        console.log(`Unhandled webhook event: ${action}`);
-        res.status(200).json({ status: 'received', action });
+        console.log(`Unhandled webhook event: ${event}`);
+        res.status(200).json({ status: 'received', event });
     }
   } catch (error) {
     console.error('Webhook error:', error);
@@ -74,37 +74,51 @@ export default async function handler(req, res) {
   res.status(200).json({ status: 'processed' });
 }
 
-async function handleNewMembership(data, res) {
-  console.log('New premium membership:', data);
-  // Member upgraded to premium - grant access
-}
+async function handleMembershipActivated(data) {
+  console.log('Membership activated:', data);
+  // New member joined - add to database
+  // data typically contains: user_id, membership_id, plan_id, etc.
+  const userId = data?.user_id || data?.membership?.user_id;
+  const email = data?.email || data?.user?.email || data?.membership?.user?.email;
 
-async function handleMembershipEnded(data, res) {
-  console.log('Membership ended:', data);
-  // Remove premium access
-}
-
-async function handlePaymentSuccess(data, res) {
-  console.log('Payment succeeded:', data);
-  // Record payment
-}
-
-async function handleMembershipCreated(data, res) {
-  console.log('New membership:', data);
-  const { user, email } = data || {};
-
-  if (user?.id && email) {
+  if (userId && email) {
     try {
-      // Add member to database
       await supabase.from('members').upsert({
-        whop_user_id: user.id,
+        whop_user_id: userId,
         email: email,
-        status: 'pending',
+        status: 'active',
         current_day: 1,
         joined_at: new Date().toISOString()
       }, { onConflict: 'whop_user_id' });
+      console.log('Member added:', email);
     } catch (e) {
       console.log('Member insert error:', e.message);
     }
   }
+}
+
+async function handleMembershipDeactivated(data) {
+  console.log('Membership deactivated:', data);
+  // Membership ended - update status
+  const userId = data?.user_id || data?.membership?.user_id;
+  if (userId) {
+    try {
+      await supabase.from('members')
+        .update({ status: 'cancelled' })
+        .eq('whop_user_id', userId);
+      console.log('Member deactivated:', userId);
+    } catch (e) {
+      console.log('Member update error:', e.message);
+    }
+  }
+}
+
+async function handlePaymentSucceeded(data) {
+  console.log('Payment succeeded:', data);
+  // Record payment - could log to email_logs table
+}
+
+async function handleRefundCreated(data) {
+  console.log('Refund created:', data);
+  // Handle refund - update member status
 }

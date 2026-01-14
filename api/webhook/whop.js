@@ -20,19 +20,22 @@ export default async function handler(req, res) {
     const signature = req.headers['x-whop-signature'];
     const webhookSecret = process.env.WHOP_WEBHOOK_SECRET;
 
-    if (webhookSecret && signature) {
-      const isDevMode = process.env.VITE_WHOP_DEV_MODE === 'true';
-      if (!isDevMode) {
-        const expectedSignature = crypto
-          .createHmac('sha256', webhookSecret)
-          .update(JSON.stringify(req.body))
-          .digest('hex');
+    // Skip verification if no secret configured or in development
+    const isDevMode = process.env.NODE_ENV !== 'production' || !webhookSecret;
 
-        if (signature !== expectedSignature) {
-          console.error('Invalid webhook signature');
-          return res.status(401).json({ error: 'Invalid signature' });
-        }
+    if (!isDevMode && signature) {
+      const expectedSignature = crypto
+        .createHmac('sha256', webhookSecret)
+        .update(JSON.stringify(req.body))
+        .digest('hex');
+
+      if (signature !== expectedSignature) {
+        console.error('Invalid webhook signature');
+        return res.status(401).json({ error: 'Invalid signature' });
       }
+    } else if (!signature) {
+      // No signature provided - allow for testing but log warning
+      console.warn('No webhook signature - allowing for testing');
     }
 
     const { event, data } = req.body;

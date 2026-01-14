@@ -35,13 +35,18 @@ const StatusBadge = ({ status }) => {
 };
 
 // --- API Helper ---
+const API_BASE = import.meta.env.PROD
+  ? ''
+  : 'http://localhost:3000';
+
 const apiFetch = async (endpoint, options = {}) => {
   const token = localStorage.getItem('whop_auth_token') || 'dev_token';
-  const response = await fetch(`http://localhost:3000${endpoint}`, {
+  const response = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
+      'x-user-id': localStorage.getItem('whop_user_id') || 'dev_user',
       ...options.headers,
     },
   });
